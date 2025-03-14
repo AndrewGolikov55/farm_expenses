@@ -1,0 +1,41 @@
+{% extends "main/base.html" %}
+{% block content %}
+<h2>Расходы: {{ org.name }}</h2>
+
+<a href="{% url 'expense_create' %}" class="btn btn-primary mb-3">Добавить расход</a>
+
+<table class="table table-bordered table-striped">
+  <thead>
+    <tr>
+      <th>Категория</th>
+      <th>Поставщик</th>
+      <th>Описание</th>
+      <th>Сумма</th>
+      <th>Дата</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in expenses %}
+      <tr>
+        <td>
+          {% if e.category %}
+            {{ e.category.name }}
+          {% else %}
+            --
+          {% endif %}
+        </td>
+        <td>
+          {% if e.supplier %}
+            {{ e.supplier.name }}
+          {% else %}
+            --
+          {% endif %}
+        </td>
+        <td>{{ e.description }}</td>
+        <td>{{ e.amount }}</td>
+        <td>{{ e.date }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

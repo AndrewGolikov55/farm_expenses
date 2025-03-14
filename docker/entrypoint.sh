@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Миграция БД
-python manage.py makemigrations config users organizations
+python manage.py makemigrations config users organizations finances
 python manage.py migrate
 
 # Проверка и создание суперпользователя

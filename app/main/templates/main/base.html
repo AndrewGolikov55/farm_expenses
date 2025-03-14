@@ -45,16 +45,39 @@
               <span class="nav-link-text ms-2">Главная</span>
             </a>
           </li>
+
           <li class="nav-item">
             <a class="nav-link d-flex align-items-center" href="{% url 'org_list' %}">
               <i class="bi bi-people-fill"></i>
               <span class="nav-link-text ms-2">Мои организации</span>
             </a>
           </li>
+
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center" href="{% url 'expenses_list' %}">
+              <i class="bi bi-cash"></i>
+              <span class="nav-link-text ms-2">Расходы</span>
+            </a>
+          </li>
+        
           <li class="nav-item">
             <a class="nav-link d-flex align-items-center" href="#">
-              <i class="bi bi-bar-chart-fill"></i>
-              <span class="nav-link-text ms-2">Отчёты</span>
+              <i class="bi bi-tags-fill"></i>
+              <span class="nav-link-text ms-2">Категории</span>
+            </a>
+          </li>
+        
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center" href="#">
+              <i class="bi bi-truck"></i>
+              <span class="nav-link-text ms-2">Поставщики</span>
+            </a>
+          </li>
+        
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center" href="{% url 'analytics_index' %}">
+              <i class="bi bi-graph-up-arrow"></i>
+              <span class="nav-link-text ms-2">Аналитика</span>
             </a>
           </li>
       
