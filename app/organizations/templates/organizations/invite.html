@@ -1,0 +1,10 @@
+{% extends "main/base.html" %}
+{% block head_title %}Организации{% endblock %}
+{% block content %}
+  <h2>Пригласить пользователя в {{ org.name }}</h2>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Пригласить</button>
+  </form>
+{% endblock %}

@@ -1,0 +1,52 @@
+version: "3"
+services:
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=farm_db
+      - POSTGRES_USER=farm_user
+      - POSTGRES_PASSWORD=farm_password
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    networks:
+      - farm_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "farm_user", "-d", "farm_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build: .
+    image: farm_project:dev
+    container_name: farm_app_dev
+    environment:
+      - DJANGO_SECRET_KEY=secret_key
+      - DJANGO_ADMIN=admin
+      - DJANGO_PASSWORD=admin
+      - POSTGRES_DB=farm_db
+      - POSTGRES_USER=farm_user
+      - POSTGRES_PASSWORD=farm_password
+      - DJANGO_DEBUG_MODE=True
+    restart: unless-stopped
+    networks:
+      - farm_network
+    volumes:
+        - ../app:/app
+        - ./entrypoint.sh:/entry.sh
+    command: /entry.sh
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+networks:
+  farm_network:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:

@@ -1,0 +1,62 @@
+/* Примерно жёлтый фон, имитирующий 1С */
+.sidebar-1c {
+    background-color: #FFF3BE; /* бледно-жёлтый цвет, имитирующий 1С */
+    min-height: 100vh;
+    width: 200px; /* ширина в развернутом состоянии */
+    transition: width 0.3s ease;
+    overflow: hidden; /* чтобы скрывать содержимое при сужении */
+    display: flex;
+    flex-direction: column;
+
+    /* Заставим высоту: 100vh = вся высота экрана */
+    height: 100vh;
+
+    /* Кастомная тень */
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.15);
+  }
+
+/* Если применим класс collapsed, sidebar сузится */
+.sidebar-1c.collapsed {
+    width: 60px; 
+}
+/* Чтобы иконки и текст адекватно выглядели при сворачивании: */
+.sidebar-1c.collapsed .nav-link-text {
+    display: none; 
+}
+/* Но иконки пусть остаются видимыми */
+.sidebar-1c.collapsed i {
+    font-size: 1.2rem;
+}
+/* Кнопка "Toggle" внутри sidebar (верхний край) */
+.sidebar-toggle-btn {
+    margin-bottom: 1rem;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    color: #333;
+    padding: 0.5rem 1rem;
+}
+.sidebar-toggle-btn:hover {
+    background-color: #f0eac0;
+    cursor: pointer;
+}
+.nav-link {
+    color: #333; 
+}
+.nav-link:hover {
+    background-color: #f0eac0;
+}
+
+/* Список растягиваем */
+.sidebar-1c .nav.flex-column {
+    flex: 1;           /* берёт всю доступную высоту, минус кнопку */
+    display: flex;     /* чтобы можно было использовать justify-content */
+    flex-direction: column;
+  }
+  
+  .logout-nav-item {
+    margin-top: auto;  /* теперь действительно прилипает к низу */
+  }

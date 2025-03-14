@@ -1,0 +1,43 @@
+{% extends "main/base.html" %}
+{% block head_title %}Организации{% endblock %}
+{% block content %}
+  <h2>Организация: {{ org.name }}</h2>
+  <p>{{ org.description }}</p>
+
+  <h4>Участники:</h4>
+  <ul>
+    {% for mem in members %}
+      <li>
+        {{ mem.user.username }} ({{ mem.get_role_display }})
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if membership.role == 'admin' %}
+    <h4>Приглашения:</h4>
+    <ul>
+        {% for inv in invitations %}
+        <li>
+            {{ inv.email }}
+            {% if inv.accepted %}
+            - Уже принято
+            {% elif inv.declined %}
+            - Отклонено
+            {% else %}
+            - Ожидает подтверждения
+            {% endif %}
+        </li>
+        {% empty %}
+        <li>Приглашений нет</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+  {% if membership.role == 'admin' %}
+    <a class="btn btn-primary" href="{% url 'org_invite' org.id %}">Пригласить пользователя</a>
+  {% endif %}
+
+  {% if membership.role == 'member' %}
+  <a href="{% url 'org_leave' org.id %}" class="btn btn-danger mt-3">Покинуть</a>
+  {% endif %}
+{% endblock %}

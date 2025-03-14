@@ -1,0 +1,27 @@
+{% extends "main/base.html" %}
+{% block content %}
+  <h1>Нет организаций</h1>
+  <p>Вы не состоите ни в одной организации. Создайте свою организацию или попросите администратора добавить Вас.</p>
+  <a class="btn btn-primary" href="{% url 'org_create' %}">Создать организацию</a>
+
+  <hr/>
+
+  <h3>Ваши активные приглашения:</h3>
+  {% if invites and invites.count %}
+    <ul>
+    {% for inv in invites %}
+      <li>
+        {{ inv.organization.name }} ({{ inv.email }})
+        <a class="btn btn-success btn-sm" href="{% url 'invite_confirm' inv.token %}">
+          Принять
+        </a>
+        <a class="btn btn-danger btn-sm" href="{% url 'invite_decline' inv.token %}">
+          Отклонить
+        </a>
+      </li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <p>Нет активных приглашений</p>
+  {% endif %}
+{% endblock %}

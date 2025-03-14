@@ -1,0 +1,79 @@
+{% extends "main/base.html" %}
+{% block head_title %}Регистрация{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="height: 90vh;">
+  <div class="card p-4 shadow-lg" style="width: 420px;">
+    <h2 class="text-center mb-4">Регистрация в FarmExpenses</h2>
+    
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      <!-- Если хотите выводить общие ошибки формы -->
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+      {% endif %}
+      
+      <!-- Поле: Имя пользователя -->
+      <div class="form-floating mb-3">
+        {{ form.username }}
+        <label for="id_username">Имя пользователя</label>
+
+        <!-- Ошибки валидации -->
+        {% if form.username.errors %}
+          <div class="text-danger small mt-1">
+            {{ form.username.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Поле: Адрес эл. почты -->
+      <div class="form-floating mb-3">
+        {{ form.email }}
+        <label for="id_email">Адрес электронной почты</label>
+
+        {% if form.email.errors %}
+          <div class="text-danger small mt-1">
+            {{ form.email.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Поле: Пароль -->
+      <div class="form-floating mb-3">
+        {{ form.password1 }}
+        <label for="id_password1">Пароль</label>
+
+        <!-- Подсказка -->
+        <div class="form-text">
+          Пароль должен быть не менее 8 символов и содержать буквы, цифры и спецсимволы.
+        </div>
+
+        {% if form.password1.errors %}
+          <div class="text-danger small mt-1">
+            {{ form.password1.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Поле: Повтор пароля -->
+      <div class="form-floating mb-3">
+        {{ form.password2 }}
+        <label for="id_password2">Повторите пароль</label>
+
+        {% if form.password2.errors %}
+          <div class="text-danger small mt-1">
+            {{ form.password2.errors.0 }}
+          </div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-success w-100">
+        Зарегистрироваться
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

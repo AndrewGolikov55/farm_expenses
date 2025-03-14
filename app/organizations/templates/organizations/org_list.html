@@ -1,0 +1,12 @@
+{% extends "main/base.html" %}
+{% block head_title %}Организации{% endblock %}
+{% block content %}
+  <ul>
+    {% for org in orgs %}
+      <li>
+        <a href="{% url 'org_detail' org.id %}">{{ org.name }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  <a class="btn btn-secondary" href="{% url 'org_create' %}">Создать новую</a>
+{% endblock %}

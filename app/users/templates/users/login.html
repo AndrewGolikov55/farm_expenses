@@ -1,0 +1,45 @@
+{% extends "main/base.html" %}
+{% block head_title %}Вход{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row justify-content-center align-items-center" style="height: 100vh;">
+    <div class="col-11 col-sm-8 col-md-6 col-lg-4">
+      <div class="card shadow p-4">
+        <h2 class="text-center mb-4">FarmExpenses</h2>
+        <form method="POST" novalidate>
+          {% csrf_token %}
+
+          <!-- Имя пользователя -->
+          <div class="mb-3">
+            <label for="id_username" class="form-label">Имя пользователя</label>
+            <input 
+              type="text" class="form-control" id="id_username" 
+              name="username" required
+            />
+          </div>
+
+          <!-- Пароль -->
+          <div class="mb-3">
+            <label for="id_password" class="form-label">Пароль</label>
+            <input 
+              type="password" class="form-control" id="id_password" 
+              name="password" required
+            />
+          </div>
+
+          <!-- Кнопка входа -->
+          <button type="submit" class="btn btn-primary w-100 mb-2">
+            Войти
+          </button>
+
+          <!-- Кнопка регистрации -->
+          <a href="{% url 'register' %}" class="btn btn-outline-secondary w-100">
+            Зарегистрироваться
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

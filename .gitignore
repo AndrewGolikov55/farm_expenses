@@ -1,0 +1,14 @@
+# Python
+venv
+
+# Django
+**/__pycache__
+**/staticfiles
+*.sqlite3
+
+# NodeJS
+node_modules
+package*.json
+
+# IDE
+.idea
