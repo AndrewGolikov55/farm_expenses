@@ -13,28 +13,35 @@ from django.db.models.functions import TruncMonth
 
 @login_required
 def expenses_list_view(request):
-    """Показываем все расходы текущей организации."""
+    """Показываем все расходы текущей организации + форму (пустую) для модального окна."""
     membership = Membership.objects.filter(user=request.user).first()
     if not membership:
         messages.error(request, "Вы не состоите ни в одной организации.")
-        return redirect('org_list')  # no_organization.html
+        return redirect('org_list')
 
     org = membership.organization
-    # Выбираем все расходы этой организации
     expenses = Expense.objects.filter(organization=org).order_by('-date')
+    membership = Membership.objects.filter(user=request.user).first()
+
+    # Пустая форма для всплывающего окна "Добавить расход"
+    form = ExpenseForm()
 
     return render(request, 'finances/expenses_list.html', {
         'expenses': expenses,
-        'org': org
+        'org': org,
+        'form': form,
+        'membership': membership,
     })
 
 
 @login_required
 def expense_create_view(request):
+    """Обрабатывает POST (создание нового расхода), потом редиректит на список."""
     membership = Membership.objects.filter(user=request.user).first()
     if not membership:
         messages.error(request, "Вы не состоите ни в одной организации.")
         return redirect('org_list')
+
     org = membership.organization
 
     if request.method == 'POST':
@@ -45,11 +52,12 @@ def expense_create_view(request):
             expense.user = request.user
             expense.save()
             messages.success(request, "Расход добавлен.")
-            return redirect('expenses_list')
-    else:
-        form = ExpenseForm()
+        else:
+            messages.error(request, "Исправьте ошибки формы.")
+        return redirect('expenses_list')  # возврат на список
 
-    return render(request, 'finances/expense_create.html', {'form': form})
+    # Если кто-то случайно GET, редиректим
+    return redirect('expenses_list')
 
 
 # Аналитика
@@ -123,23 +131,80 @@ def analytics_index(request):
 # Категории
 @login_required
 def categories_list_view(request):
-    """Список категорий текущей организации."""
     membership = Membership.objects.filter(user=request.user).first()
+    
     if not membership:
         messages.error(request, "Вы не состоите ни в одной организации.")
         return redirect('org_list')
     org = membership.organization
 
     categories = Category.objects.filter(organization=org).order_by('name')
+    # Пустая форма для модалки
+    form = CategoryForm()
+
     return render(request, 'finances/categories_list.html', {
         'categories': categories,
         'org': org,
+        'form': form,
+        'membership': membership,
     })
 
 
 @login_required
+def expense_edit_view(request, exp_id):
+    """Редактирование конкретного расхода (только для admin)."""
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Нет организации.")
+        return redirect('org_list')
+
+    if membership.role != 'admin':
+        messages.error(request, "Только администратор может редактировать расходы.")
+        return redirect('expenses_list')
+
+    org = membership.organization
+    expense = get_object_or_404(Expense, id=exp_id, organization=org)
+
+    if request.method == 'POST':
+        form = ExpenseForm(request.POST, instance=expense)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Расход обновлён.")
+        else:
+            messages.error(request, "Исправьте ошибки формы.")
+        return redirect('expenses_list')
+    else:
+        form = ExpenseForm(instance=expense)
+
+    return render(request, 'finances/expense_edit.html', {
+        'org': org,
+        'form': form,
+        'expense': expense
+    })
+
+
+@login_required
+def expense_delete_view(request, exp_id):
+    """Удаление расхода (только для admin)."""
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Нет организации.")
+        return redirect('org_list')
+
+    if membership.role != 'admin':
+        messages.error(request, "Только администратор может удалять расходы.")
+        return redirect('expenses_list')
+
+    org = membership.organization
+    expense = get_object_or_404(Expense, id=exp_id, organization=org)
+
+    expense.delete()
+    messages.success(request, "Расход удалён.")
+    return redirect('expenses_list')
+
+
+@login_required
 def category_create_view(request):
-    """Создание новой категории (например, доступно только админу)."""
     membership = Membership.objects.filter(user=request.user).first()
     if not membership:
         messages.error(request, "Нет организации.")
@@ -157,14 +222,12 @@ def category_create_view(request):
             cat.organization = org
             cat.save()
             messages.success(request, "Категория создана.")
-            return redirect('categories_list')
-    else:
-        form = CategoryForm()
+        else:
+            messages.error(request, "Исправьте ошибки формы.")
+        return redirect('categories_list')
 
-    return render(request, 'finances/category_create.html', {
-        'form': form,
-        'org': org
-    })
+    # Если GET — просто redirect
+    return redirect('categories_list')
 
 
 @login_required
@@ -221,9 +284,13 @@ def suppliers_list_view(request):
     org = membership.organization
 
     suppliers = Supplier.objects.filter(organization=org).order_by('name')
+
+    form = SupplierForm()
     return render(request, 'finances/suppliers_list.html', {
         'suppliers': suppliers,
         'org': org,
+        'form': form,
+        'membership': membership,
     })
 
 

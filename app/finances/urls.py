@@ -4,6 +4,9 @@ from . import views
 urlpatterns = [
     path('expenses/', views.expenses_list_view, name='expenses_list'),
     path('expenses/create/', views.expense_create_view, name='expense_create'),
+    path('expenses/<int:exp_id>/edit/', views.expense_edit_view, name='expense_edit'),
+    path('expenses/<int:exp_id>/delete/', views.expense_delete_view, name='expense_delete'),
+    
     # Analytic
     path('analytics_index/', views.analytics_index, name='analytics_index'),
 

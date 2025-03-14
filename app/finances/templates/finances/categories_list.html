@@ -1,8 +1,16 @@
 {% extends "main/base.html" %}
+{% load static %}
 {% block content %}
 <h2>Категории ({{ org.name }})</h2>
 
-<a class="btn btn-primary mb-3" href="{% url 'category_create' %}">Добавить категорию</a>
+<button 
+  type="button" 
+  class="btn btn-primary mb-3"
+  data-bs-toggle="modal"
+  data-bs-target="#categoryModal"
+>
+  Добавить категорию
+</button>
 
 <table class="table table-striped">
   <thead>
@@ -17,13 +25,54 @@
     <tr>
       <td>{{ cat.name }}</td>
       <td>{{ cat.description }}</td>
+      {% if membership.role == 'admin' %}
       <td>
         <a href="{% url 'category_edit' cat.id %}" class="btn btn-sm btn-secondary">Изменить</a>
-        <a href="{% url 'category_delete' cat.id %}" class="btn btn-sm btn-danger"
-           onclick="return confirm('Удалить категорию?');">Удалить</a>
+        <a 
+          href="{% url 'category_delete' cat.id %}"
+          class="btn btn-sm btn-danger"
+          onclick="return confirm('Удалить категорию?');"
+        >
+          Удалить
+        </a>
       </td>
+      {% endif %}
     </tr>
   {% endfor %}
   </tbody>
 </table>
+
+<!-- Модальное окно "Добавить категорию" -->
+<div class="modal fade" id="categoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Новая категория</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <form method="POST" action="{% url 'category_create' %}">
+          {% csrf_token %}
+          
+          <div class="form-floating mb-3">
+            {{ form.name }}
+            <label for="id_name">Название</label>
+          </div>
+
+          <div class="form-floating mb-3" style="height:80px;">
+            {{ form.description }}
+            <label for="id_description">Описание</label>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="submit" class="btn btn-success">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

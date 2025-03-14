@@ -1,8 +1,17 @@
 {% extends "main/base.html" %}
+{% load static %}
 {% block content %}
 <h2>Расходы: {{ org.name }}</h2>
 
-<a href="{% url 'expense_create' %}" class="btn btn-primary mb-3">Добавить расход</a>
+<!-- Кнопка открыть модалку -->
+<button 
+  type="button" 
+  class="btn btn-primary mb-3"
+  data-bs-toggle="modal"
+  data-bs-target="#expenseModal"
+>
+  Добавить расход
+</button>
 
 <table class="table table-bordered table-striped">
   <thead>
@@ -34,8 +43,83 @@
         <td>{{ e.description }}</td>
         <td>{{ e.amount }}</td>
         <td>{{ e.date }}</td>
+        {% if membership.role == 'admin' %}
+        <td>
+          <a href="{% url 'expense_edit' e.id %}" class="btn btn-sm btn-secondary">Изменить</a>
+          <a 
+            href="{% url 'expense_delete' e.id %}" 
+            class="btn btn-sm btn-danger"
+            onclick="return confirm('Удалить расход?');"
+          >
+            Удалить
+          </a>
+        </td>
+        {% endif %}
       </tr>
     {% endfor %}
-    </tbody>
+  </tbody>
 </table>
+
+<!-- МОДАЛЬНОЕ ОКНО (добавить расход) -->
+<div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <!-- header -->
+      <div class="modal-header">
+        <h5 class="modal-title">Добавить расход</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <!-- body -->
+      <div class="modal-body">
+        <form method="POST" action="{% url 'expense_create' %}" novalidate>
+          {% csrf_token %}
+
+          <!-- Если хотим показывать ошибки формы прямо здесь (в случае AJAX или inline) -->
+          <!-- {% for error in form.non_field_errors %} 
+               <div class="text-danger">{{ error }}</div>
+              {% endfor %} -->
+
+          <!-- Поле category -->
+          <div class="mb-3">
+            <label for="id_category" class="form-label">Категория</label>
+            {{ form.category }}
+          </div>
+
+          <!-- Поставщик -->
+          <div class="mb-3">
+            <label for="id_supplier" class="form-label">Поставщик</label>
+            {{ form.supplier }}
+          </div>
+
+          <!-- Сумма (form-floating пример) -->
+          <div class="form-floating mb-3">
+            {{ form.amount }}
+            <label for="id_amount">Сумма</label>
+          </div>
+
+          <!-- Описание -->
+          <div class="form-floating mb-3" style="height:120px;">
+            {{ form.description }}
+            <label for="id_description">Описание</label>
+          </div>
+
+          <!-- Дата -->
+          <div class="form-floating mb-3">
+            {{ form.date }}
+            <label for="id_date">Дата</label>
+          </div>
+
+          <div class="modal-footer">
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              data-bs-dismiss="modal"
+            >Отмена</button>
+            <button type="submit" class="btn btn-success">Сохранить</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
