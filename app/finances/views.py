@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Expense, Category, Supplier
-from .forms import ExpenseForm
+from .forms import ExpenseForm, CategoryForm, SupplierForm
 from organizations.models import Membership
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
@@ -52,6 +52,7 @@ def expense_create_view(request):
     return render(request, 'finances/expense_create.html', {'form': form})
 
 
+# Аналитика
 @login_required
 def analytics_index(request):
     """Аналитика финансов фермерского хозяйства."""
@@ -117,3 +118,180 @@ def analytics_index(request):
         'cat_values_json': json.dumps(cat_values),
     }
     return render(request, 'finances/analytics_index.html', context)
+
+
+# Категории
+@login_required
+def categories_list_view(request):
+    """Список категорий текущей организации."""
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Вы не состоите ни в одной организации.")
+        return redirect('org_list')
+    org = membership.organization
+
+    categories = Category.objects.filter(organization=org).order_by('name')
+    return render(request, 'finances/categories_list.html', {
+        'categories': categories,
+        'org': org,
+    })
+
+
+@login_required
+def category_create_view(request):
+    """Создание новой категории (например, доступно только админу)."""
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Нет организации.")
+        return redirect('org_list')
+    if membership.role != 'admin':
+        messages.error(request, "Только администратор может создавать категории.")
+        return redirect('categories_list')
+
+    org = membership.organization
+
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            cat = form.save(commit=False)
+            cat.organization = org
+            cat.save()
+            messages.success(request, "Категория создана.")
+            return redirect('categories_list')
+    else:
+        form = CategoryForm()
+
+    return render(request, 'finances/category_create.html', {
+        'form': form,
+        'org': org
+    })
+
+
+@login_required
+def category_edit_view(request, cat_id):
+    """Редактирование категории."""
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Нет организации.")
+        return redirect('org_list')
+    if membership.role != 'admin':
+        messages.error(request, "Только администратор может редактировать категории.")
+        return redirect('categories_list')
+
+    org = membership.organization
+    category = get_object_or_404(Category, id=cat_id, organization=org)
+
+    if request.method == 'POST':
+        form = CategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Категория обновлена.")
+            return redirect('categories_list')
+    else:
+        form = CategoryForm(instance=category)
+
+    return render(request, 'finances/category_edit.html', {
+        'form': form,
+        'org': org,
+        'category': category,
+    })
+
+
+@login_required
+def category_delete_view(request, cat_id):
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership or membership.role != 'admin':
+        messages.error(request, "Только администратор.")
+        return redirect('categories_list')
+
+    org = membership.organization
+    category = get_object_or_404(Category, id=cat_id, organization=org)
+    category.delete()
+    messages.success(request, "Категория удалена.")
+    return redirect('categories_list')
+
+
+# Поставщики
+@login_required
+def suppliers_list_view(request):
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Вы не состоите в организации.")
+        return redirect('org_list')
+    org = membership.organization
+
+    suppliers = Supplier.objects.filter(organization=org).order_by('name')
+    return render(request, 'finances/suppliers_list.html', {
+        'suppliers': suppliers,
+        'org': org,
+    })
+
+
+@login_required
+def supplier_create_view(request):
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Нет организации.")
+        return redirect('org_list')
+    # Возможно, разрешим и member создавать
+    # if membership.role != 'admin':
+    #     messages.error(request, "Только администратор может создавать поставщиков.")
+    #     return redirect('suppliers_list')
+
+    org = membership.organization
+
+    if request.method == 'POST':
+        form = SupplierForm(request.POST)
+        if form.is_valid():
+            sup = form.save(commit=False)
+            sup.organization = org
+            sup.save()
+            messages.success(request, "Поставщик создан.")
+            return redirect('suppliers_list')
+    else:
+        form = SupplierForm()
+
+    return render(request, 'finances/suppliers_create.html', {
+        'form': form,
+        'org': org
+    })
+
+
+@login_required
+def supplier_edit_view(request, sup_id):
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Нет организации.")
+        return redirect('org_list')
+
+    org = membership.organization
+    supplier = get_object_or_404(Supplier, id=sup_id, organization=org)
+
+    if request.method == 'POST':
+        form = SupplierForm(request.POST, instance=supplier)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Поставщик обновлён.")
+            return redirect('suppliers_list')
+    else:
+        form = SupplierForm(instance=supplier)
+
+    return render(request, 'finances/suppliers_edit.html', {
+        'form': form,
+        'org': org,
+        'supplier': supplier,
+    })
+
+
+@login_required
+def supplier_delete_view(request, sup_id):
+    membership = Membership.objects.filter(user=request.user).first()
+    if not membership:
+        messages.error(request, "Нет организации.")
+        return redirect('org_list')
+
+    org = membership.organization
+    supplier = get_object_or_404(Supplier, id=sup_id, organization=org)
+    supplier.delete()
+    messages.success(request, "Поставщик удалён.")
+    return redirect('suppliers_list')

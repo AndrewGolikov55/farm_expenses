@@ -1,0 +1,29 @@
+{% extends "main/base.html" %}
+{% block content %}
+<h2>Поставщики ({{ org.name }})</h2>
+
+<a class="btn btn-primary mb-3" href="{% url 'supplier_create' %}">Добавить поставщика</a>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Название</th>
+      <th>Контакты</th>
+      <th>Действия</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for s in suppliers %}
+    <tr>
+      <td>{{ s.name }}</td>
+      <td>{{ s.contact_info }}</td>
+      <td>
+        <a href="{% url 'supplier_edit' s.id %}" class="btn btn-sm btn-secondary">Изменить</a>
+        <a href="{% url 'supplier_delete' s.id %}" class="btn btn-sm btn-danger"
+           onclick="return confirm('Удалить поставщика?');">Удалить</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
