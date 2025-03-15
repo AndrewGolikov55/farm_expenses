@@ -1,0 +1,11 @@
+{# finances/templates/finances/income_category_edit.html #}
+{% extends "main/base.html" %}
+{% block content %}
+<h2>Изменить категорию доходов</h2>
+
+<form method="POST">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-success">Сохранить</button>
+</form>
+{% endblock %}

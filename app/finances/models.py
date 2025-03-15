@@ -33,3 +33,26 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.category} - {self.amount} ({self.date})"
+
+
+class IncomeCategory(models.Model):
+    """Категории дохода (например: Продажа продукции, Государственные субсидии, Прочее...)."""
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+class Income(models.Model):
+    """Доходы фермы."""
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    category = models.ForeignKey(IncomeCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True)
+    date = models.DateField()
+
+    def __str__(self):
+        return f"{self.category} - {self.amount} ({self.date})"
