@@ -8,30 +8,7 @@ from .models import Expense, Category, Supplier, IncomeCategory, Income
 from .forms import ExpenseForm, CategoryForm, SupplierForm, IncomeForm, IncomeCategoryForm
 from organizations.models import Membership
 from django.db.models import Sum
-from django.db.models.functions import TruncMonth
-
-
-#@login_required
-#def expenses_list_view(request):
-#    """Показываем все расходы текущей организации + форму (пустую) для модального окна."""
-#    membership = Membership.objects.filter(user=request.user).first()
-#    if not membership:
-#        messages.error(request, "Вы не состоите ни в одной организации.")
-#        return redirect('org_list')
-#
-#    org = membership.organization
-#    expenses = Expense.objects.filter(organization=org).order_by('-date')
-#    membership = Membership.objects.filter(user=request.user).first()
-#
-#    # Пустая форма для всплывающего окна "Добавить расход"
-#    form = ExpenseForm()
-#
-#    return render(request, 'finances/expenses_list.html', {
-#        'expenses': expenses,
-#        'org': org,
-#        'form': form,
-#        'membership': membership,
-#    })
+from django.db.models.functions import TruncMonth, ExtractYear, ExtractMonth
 
 
 @login_required
@@ -70,10 +47,12 @@ def analytics_index(request):
 
     org = membership.organization
 
-    # 1) Дата год назад
-    one_year_ago = datetime.date.today().replace(day=1) - datetime.timedelta(days=365)
+    # =========================
+    # 1) Месячные расходы/доходы (за год) + Баланс
+    # =========================
+    one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
 
-    # 2) Месячные расходы
+    # Расходы по месяцам
     expense_by_month = (
         Expense.objects
                .filter(organization=org, date__gte=one_year_ago)
@@ -82,8 +61,7 @@ def analytics_index(request):
                .annotate(sum_exp=Sum('amount'))
                .order_by('month')
     )
-
-    # 3) Месячные доходы
+    # Доходы по месяцам
     income_by_month = (
         Income.objects
               .filter(organization=org, date__gte=one_year_ago)
@@ -93,43 +71,35 @@ def analytics_index(request):
               .order_by('month')
     )
 
-    # Превращаем в словари {month -> sum_exp} / {month -> sum_inc}
-    expense_map = {}
-    for row in expense_by_month:
-        expense_map[row['month']] = float(row['sum_exp'] or 0)
+    # Превращаем в словари: {month -> sum_exp}, {month -> sum_inc}
+    expense_map = { row['month']: float(row['sum_exp'] or 0) for row in expense_by_month }
+    income_map = { row['month']: float(row['sum_inc'] or 0) for row in income_by_month }
 
-    income_map = {}
-    for row in income_by_month:
-        income_map[row['month']] = float(row['sum_inc'] or 0)
-
-    # 4) Собираем общий список месяцев (берём объединение ключей)
+    # Собираем общий список месяцев
     all_months = sorted(set(expense_map.keys()) | set(income_map.keys()))
-
     month_labels = []
     expenses_list = []
     incomes_list = []
     balance_list = []
 
     for m in all_months:
-        # Пример: m.strftime('%Y-%m')
         label_str = m.strftime('%Y-%m')
         month_labels.append(label_str)
+        e_val = expense_map.get(m, 0)
+        i_val = income_map.get(m, 0)
+        expenses_list.append(e_val)
+        incomes_list.append(i_val)
+        balance_list.append(i_val - e_val)
 
-        exp_val = expense_map.get(m, 0)
-        inc_val = income_map.get(m, 0)
-        expenses_list.append(exp_val)
-        incomes_list.append(inc_val)
-
-        # Баланс за месяц
-        balance_list.append(inc_val - exp_val)
-
-    # 5) Итоговые суммы (уже есть)
+    # Итоговые суммы
     total_expenses = sum(expenses_list)
     total_incomes = sum(incomes_list)
     balance = total_incomes - total_expenses
 
-    # 6) Распределение расходов по категориям (как у Вас)
-    cat_qs = (
+    # =========================
+    # 2) Распределение расходов по категориям
+    # =========================
+    data_by_cat_qs = (
         Expense.objects
                .filter(organization=org)
                .values('category__name')
@@ -138,29 +108,147 @@ def analytics_index(request):
     )
     cat_labels = []
     cat_values = []
-    for row in cat_qs:
+    for row in data_by_cat_qs:
         cat_name = row['category__name'] or "Без категории"
         cat_labels.append(cat_name)
         cat_values.append(float(row['total'] or 0))
 
-    # 7) Сериализуем для Chart.js
+    # =========================
+    # 3) ТОП-5 доходных категорий
+    # =========================
+    top_income_cats = (
+        Income.objects
+              .filter(organization=org)
+              .values('category__name')
+              .annotate(sum_inc=Sum('amount'))
+              .order_by('-sum_inc')[:5]
+    )
+    # Превратим в простой список словарей:
+    top_incomes_list = []
+    for row in top_income_cats:
+        cname = row['category__name'] or "Без категории"
+        top_incomes_list.append({
+            'category': cname,
+            'sum_inc': float(row['sum_inc'] or 0)
+        })
+
+    # =========================
+    # 4) ТОП-5 поставщиков (по расходам)
+    # =========================
+    top_suppliers_qs = (
+        Expense.objects
+               .filter(organization=org)
+               .values('supplier__name')
+               .annotate(sum_exp=Sum('amount'))
+               .order_by('-sum_exp')[:5]
+    )
+    top_suppliers_list = []
+    for row in top_suppliers_qs:
+        sname = row['supplier__name'] or "Без поставщика"
+        top_suppliers_list.append({
+            'supplier': sname,
+            'sum_exp': float(row['sum_exp'] or 0)
+        })
+
+    # =========================
+    # 5) Процент изменения расходов/доходов (текущий месяц vs предыдущий)
+    # =========================
+    today = datetime.date.today()
+    # Текущий месяц
+    current_month_exp = Expense.objects.filter(
+        organization=org,
+        date__year=today.year,
+        date__month=today.month
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+
+    current_month_inc = Income.objects.filter(
+        organization=org,
+        date__year=today.year,
+        date__month=today.month
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+
+    # Предыдущий месяц
+    # (Упрощённо: если month=1 => previous => month=12, year -=1)
+    prev_year = today.year
+    prev_month = today.month - 1
+    if prev_month == 0:
+        prev_month = 12
+        prev_year -= 1
+
+    prev_month_exp = Expense.objects.filter(
+        organization=org,
+        date__year=prev_year,
+        date__month=prev_month
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+
+    prev_month_inc = Income.objects.filter(
+        organization=org,
+        date__year=prev_year,
+        date__month=prev_month
+    ).aggregate(Sum('amount'))['amount__sum'] or 0
+
+    # Считаем процент изменения = ((cur - prev) / prev) * 100
+    def pct_change(cur, prev):
+        if prev == 0:
+            return None
+        return round((cur - prev) / prev * 100, 2)
+
+    exp_change_pct = pct_change(current_month_exp, prev_month_exp)
+    inc_change_pct = pct_change(current_month_inc, prev_month_inc)
+
+    # =========================
+    # 6) Простейший прогноз (скользящее среднее) на следующий месяц
+    # =========================
+    # Например, берём последние 3 месяца
+    # (В реальной практике лучше ARIMA, Prophet, etc.)
+    def simple_moving_average(values, window=3):
+        """Берём последние `window` значений, если их мало - fallback."""
+        if len(values) < window:
+            return sum(values) / max(len(values), 1)
+        return sum(values[-window:]) / window
+
+    # expenses_list/incomes_list уже упорядочены по all_months
+    # Предположим, expenses_list[-1] - это последняя сумма (текущий месяц).
+    # Скользящее среднее - forecastExp, forecastInc
+    forecast_exp = simple_moving_average(expenses_list)  # avg 3
+    forecast_inc = simple_moving_average(incomes_list)
+
+    # Округлим
+    forecast_exp = round(forecast_exp, 2)
+    forecast_inc = round(forecast_inc, 2)
+
+    # =========================
+    # Передаём в контекст
+    # =========================
     context = {
         'org': org,
         'total_expenses': total_expenses,
         'total_incomes': total_incomes,
         'balance': balance,
 
-        # График месяц -> расход, доход, баланс
-        'month_labels_json': json.dumps(month_labels),
+        # Месячные графики
+        'month_labels_json': json.dumps([m for m in month_labels]),
         'expenses_list_json': json.dumps(expenses_list),
         'incomes_list_json': json.dumps(incomes_list),
         'balance_list_json': json.dumps(balance_list),
 
-        # Распределение расходов
+        # Расходы по категориям (pie)
         'cat_labels_json': json.dumps(cat_labels),
         'cat_values_json': json.dumps(cat_values),
-    }
 
+        # ТОП-5 доходных категорий
+        'top_incomes_list': top_incomes_list,
+        # ТОП-5 поставщиков
+        'top_suppliers_list': top_suppliers_list,
+
+        # Процент изменений
+        'exp_change_pct': exp_change_pct,
+        'inc_change_pct': inc_change_pct,
+
+        # Прогноз (simple moving avg)
+        'forecast_exp': forecast_exp,
+        'forecast_inc': forecast_inc,
+    }
     return render(request, 'finances/analytics_index.html', context)
 
 
@@ -448,28 +536,6 @@ def supplier_delete_view(request, sup_id):
     supplier.delete()
     messages.success(request, "Поставщик удалён.")
     return redirect('suppliers_list')
-
-
-#@login_required
-#def incomes_list_view(request):
-#    """Список доходов. Только видим, если состоим в организации."""
-#    membership = Membership.objects.filter(user=request.user).first()
-#    if not membership:
-#        messages.error(request, "Вы не состоите ни в одной организации.")
-#        return redirect('org_list')
-#
-#    org = membership.organization
-#    incomes = Income.objects.filter(organization=org).order_by('-date')
-#
-#    # Пустая форма для модального окна "Добавить доход"
-#    form = IncomeForm()
-#
-#    return render(request, 'finances/incomes_list.html', {
-#        'incomes': incomes,
-#        'org': org,
-#        'form': form,
-#        'membership': membership,
-#    })
 
 
 @login_required

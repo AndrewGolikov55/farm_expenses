@@ -2,13 +2,52 @@
 {% load static %}
 
 {% block content %}
-<!-- В analytics_index.html -->
 <h2>Аналитика по {{ org.name }}</h2>
-<p>Доходы: <b>{{ total_incomes }}</b>  Расходы: <b>{{ total_expenses }}</b>  Баланс: <b>{{ balance }}</b></p>
 
-<div class="row">
+<div class="row mb-3">
   <div class="col-md-6">
-    <h4>Месячные Расходы / Доходы</h4>
+    <p>Общая сумма доходов: <b>{{ total_incomes }}</b> ₽</p>
+    <p>Общая сумма расходов: <b>{{ total_expenses }}</b> ₽</p>
+    <p>Баланс: <b>{{ balance }}</b> ₽</p>
+  </div>
+  <div class="col-md-6">
+    <h5>Изменение текущего месяца (к предыдущему):</h5>
+    <ul>
+      <li>Расходы: 
+        {% if exp_change_pct is not None %}
+          <b>{{ exp_change_pct }} %</b>
+        {% else %}
+          <span class="text-muted">нет данных</span>
+        {% endif %}
+      </li>
+      <li>Доходы: 
+        {% if inc_change_pct is not None %}
+          <b>{{ inc_change_pct }} %</b>
+        {% else %}
+          <span class="text-muted">нет данных</span>
+        {% endif %}
+      </li>
+    </ul>
+  </div>
+</div>
+
+<hr>
+
+<div class="row mb-3">
+  <div class="col-md-6">
+    <h5>Прогноз (простой скользящий):</h5>
+    <ul>
+      <li>След. месяц расходы: <b>{{ forecast_exp }}</b> ₽</li>
+      <li>След. месяц доходы: <b>{{ forecast_inc }}</b> ₽</li>
+    </ul>
+  </div>
+</div>
+
+<hr>
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <h4>Месячные Расходы / Доходы / Баланс</h4>
     <canvas id="financesChart" width="400" height="200"></canvas>
   </div>
   <div class="col-md-6">
@@ -17,7 +56,59 @@
   </div>
 </div>
 
-<!-- JSON-данные -->
+<hr>
+
+<div class="row">
+  <div class="col-md-6">
+    <h5>ТОП-5 доходных категорий</h5>
+    {% if top_incomes_list %}
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Категория</th>
+            <th>Сумма</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in top_incomes_list %}
+          <tr>
+            <td>{{ row.category }}</td>
+            <td>{{ row.sum_inc }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted">Нет доходов</p>
+    {% endif %}
+  </div>
+
+  <div class="col-md-6">
+    <h5>ТОП-5 поставщиков</h5>
+    {% if top_suppliers_list %}
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Поставщик</th>
+            <th>Сумма</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in top_suppliers_list %}
+          <tr>
+            <td>{{ row.supplier }}</td>
+            <td>{{ row.sum_exp }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted">Нет расходов</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- JSON-данные для JS-графиков -->
 <script type="application/json" id="monthLabelsJSON">
   {{ month_labels_json|safe }}
 </script>
@@ -38,73 +129,10 @@
   {{ cat_values_json|safe }}
 </script>
 
+{% endblock %}
+
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // 1) Считываем JSON
-  const monthLabels = JSON.parse(document.getElementById('monthLabelsJSON').textContent);
-  const expensesData = JSON.parse(document.getElementById('expensesListJSON').textContent);
-  const incomesData = JSON.parse(document.getElementById('incomesListJSON').textContent);
-  const balanceData = JSON.parse(document.getElementById('balanceListJSON').textContent);
-
-  const catLabels = JSON.parse(document.getElementById('catLabelsJSON').textContent);
-  const catValues = JSON.parse(document.getElementById('catValuesJSON').textContent);
-
-  // 2) Линейная диаграмма с 3 рядами: Расходы, Доходы, Баланс
-  const ctxFinances = document.getElementById('financesChart');
-  if (ctxFinances) {
-    new Chart(ctxFinances, {
-      type: 'line',
-      data: {
-        labels: monthLabels,
-        datasets: [
-          {
-            label: 'Расходы',
-            data: expensesData,
-            borderColor: 'rgba(255, 99, 132, 1)',
-            backgroundColor: 'rgba(255, 99, 132, 0.2)'
-          },
-          {
-            label: 'Доходы',
-            data: incomesData,
-            borderColor: 'rgba(54, 162, 235, 1)',
-            backgroundColor: 'rgba(54, 162, 235, 0.2)'
-          },
-          {
-            label: 'Баланс',
-            data: balanceData,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)'
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: { y: { beginAtZero: true } }
-      }
-    });
-  }
-
-  // 3) Круговая диаграмма расходов
-  const ctxCat = document.getElementById('catChart');
-  if (ctxCat) {
-    new Chart(ctxCat, {
-      type: 'pie',
-      data: {
-        labels: catLabels,
-        datasets: [{
-          label: 'Расходы по категориям',
-          data: catValues,
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-      }
-    });
-  }
-});
-</script>
-{% endblock %}
+<!-- Подключаем внешний файл analytics.js -->
+<script src="{% static 'js/analytics.js' %}"></script>
 {% endblock %}
