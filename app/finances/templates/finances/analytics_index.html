@@ -2,113 +2,137 @@
 {% load static %}
 
 {% block content %}
-<h2>Аналитика по {{ org.name }}</h2>
+<h2 class="mb-4">Аналитика по {{ org.name }}</h2>
 
-<div class="row mb-3">
-  <div class="col-md-6">
-    <p>Общая сумма доходов: <b>{{ total_incomes }}</b> ₽</p>
-    <p>Общая сумма расходов: <b>{{ total_expenses }}</b> ₽</p>
-    <p>Баланс: <b>{{ balance }}</b> ₽</p>
+<!-- Общие показатели -->
+<div class="row row-cols-1 row-cols-md-2 g-4 mb-4">
+  <!-- Карточка с общей суммой доходов/расходов/баланс -->
+  <div class="col">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Итоговые суммы</h5>
+        <p class="card-text">
+          <strong>Доходы:</strong> {{ total_incomes }} ₽ <br>
+          <strong>Расходы:</strong> {{ total_expenses }} ₽ <br>
+          <strong>Баланс:</strong> {{ balance }} ₽
+        </p>
+      </div>
+    </div>
   </div>
-  <div class="col-md-6">
-    <h5>Изменение текущего месяца (к предыдущему):</h5>
-    <ul>
-      <li>Расходы: 
-        {% if exp_change_pct is not None %}
-          <b>{{ exp_change_pct }} %</b>
-        {% else %}
-          <span class="text-muted">нет данных</span>
-        {% endif %}
-      </li>
-      <li>Доходы: 
-        {% if inc_change_pct is not None %}
-          <b>{{ inc_change_pct }} %</b>
-        {% else %}
-          <span class="text-muted">нет данных</span>
-        {% endif %}
-      </li>
-    </ul>
+
+  <!-- Карточка с изменением текущего месяца и прогнозом -->
+  <div class="col">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Динамика и прогноз</h5>
+
+        <p class="card-text">
+          <u>Изменение за текущий месяц (vs предыдущий):</u><br>
+          Расходы:
+          {% if exp_change_pct is not None %}
+            <strong>{{ exp_change_pct }}%</strong>
+          {% else %}
+            <span class="text-muted">нет данных</span>
+          {% endif %}
+          <br>
+          Доходы:
+          {% if inc_change_pct is not None %}
+            <strong>{{ inc_change_pct }}%</strong>
+          {% else %}
+            <span class="text-muted">нет данных</span>
+          {% endif %}
+        </p>
+
+        <hr>
+
+        <p class="card-text">
+          <u>Прогноз (скользящее среднее):</u><br>
+          След. месяц расходы: <strong>{{ forecast_exp }}</strong> ₽<br>
+          След. месяц доходы: <strong>{{ forecast_inc }}</strong> ₽
+        </p>
+
+      </div>
+    </div>
   </div>
 </div>
 
-<hr>
-
-<div class="row mb-3">
-  <div class="col-md-6">
-    <h5>Прогноз (простой скользящий):</h5>
-    <ul>
-      <li>След. месяц расходы: <b>{{ forecast_exp }}</b> ₽</li>
-      <li>След. месяц доходы: <b>{{ forecast_inc }}</b> ₽</li>
-    </ul>
-  </div>
-</div>
-
-<hr>
-
+<!-- Графики -->
 <div class="row mb-4">
-  <div class="col-md-6">
-    <h4>Месячные Расходы / Доходы / Баланс</h4>
-    <canvas id="financesChart" width="400" height="200"></canvas>
+  <!-- Линейный график: расходы/доходы/баланс -->
+  <div class="col-md-6 mb-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Месячные Расходы/Доходы/Баланс</h5>
+        <canvas id="financesChart" width="400" height="200"></canvas>
+      </div>
+    </div>
   </div>
-  <div class="col-md-6">
-    <h4>Распределение расходов по категориям</h4>
-    <canvas id="catChart" width="300" height="300"></canvas>
-  </div>
-</div>
-
-<hr>
-
-<div class="row">
-  <div class="col-md-6">
-    <h5>ТОП-5 доходных категорий</h5>
-    {% if top_incomes_list %}
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>Категория</th>
-            <th>Сумма</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for row in top_incomes_list %}
-          <tr>
-            <td>{{ row.category }}</td>
-            <td>{{ row.sum_inc }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p class="text-muted">Нет доходов</p>
-    {% endif %}
-  </div>
-
-  <div class="col-md-6">
-    <h5>ТОП-5 поставщиков</h5>
-    {% if top_suppliers_list %}
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>Поставщик</th>
-            <th>Сумма</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for row in top_suppliers_list %}
-          <tr>
-            <td>{{ row.supplier }}</td>
-            <td>{{ row.sum_exp }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p class="text-muted">Нет расходов</p>
-    {% endif %}
+  <!-- Пирог расходов по категориям -->
+  <div class="col-md-6 mb-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Распределение расходов по категориям</h5>
+        <canvas id="catChart" width="300" height="300"></canvas>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- JSON-данные для JS-графиков -->
+<!-- ТОП-5 доходных категорий и ТОП-5 поставщиков -->
+<div class="row row-cols-1 row-cols-md-2 g-4">
+  <!-- Карточка с ТОП-5 доходных категорий -->
+  <div class="col">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">ТОП-5 доходных категорий</h5>
+        {% if top_incomes_list %}
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Категория</th><th>Сумма</th></tr>
+            </thead>
+            <tbody>
+            {% for row in top_incomes_list %}
+              <tr>
+                <td>{{ row.category }}</td>
+                <td>{{ row.sum_inc }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-muted mb-0">Нет доходов</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <!-- Карточка с ТОП-5 поставщиков -->
+  <div class="col">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">ТОП-5 поставщиков</h5>
+        {% if top_suppliers_list %}
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Поставщик</th><th>Сумма</th></tr>
+            </thead>
+            <tbody>
+            {% for row in top_suppliers_list %}
+              <tr>
+                <td>{{ row.supplier }}</td>
+                <td>{{ row.sum_exp }}</td>
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-muted mb-0">Нет расходов</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JSON-данные -->
 <script type="application/json" id="monthLabelsJSON">
   {{ month_labels_json|safe }}
 </script>
@@ -121,7 +145,6 @@
 <script type="application/json" id="balanceListJSON">
   {{ balance_list_json|safe }}
 </script>
-
 <script type="application/json" id="catLabelsJSON">
   {{ cat_labels_json|safe }}
 </script>
@@ -133,6 +156,5 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<!-- Подключаем внешний файл analytics.js -->
 <script src="{% static 'js/analytics.js' %}"></script>
 {% endblock %}

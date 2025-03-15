@@ -1,43 +1,76 @@
 {% extends "main/base.html" %}
 {% block head_title %}Организации{% endblock %}
 {% block content %}
-  <h2>Организация: {{ org.name }}</h2>
-  <p>{{ org.description }}</p>
 
-  <h4>Участники:</h4>
-  <ul>
-    {% for mem in members %}
-      <li>
-        {{ mem.user.username }} ({{ mem.get_role_display }})
-      </li>
-    {% endfor %}
-  </ul>
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h4 class="card-title">Организация: {{ org.name }}</h4>
+    <p class="card-text">{{ org.description|default_if_none:"Нет описания" }}</p>
+  </div>
+</div>
 
-  {% if membership.role == 'admin' %}
-    <h4>Приглашения:</h4>
-    <ul>
-        {% for inv in invitations %}
-        <li>
-            {{ inv.email }}
-            {% if inv.accepted %}
-            - Уже принято
-            {% elif inv.declined %}
-            - Отклонено
-            {% else %}
-            - Ожидает подтверждения
-            {% endif %}
+<!-- Участники -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Участники</h5>
+    {% if members %}
+      <ul class="list-group list-group-flush">
+      {% for mem in members %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>
+            {{ mem.user.username }} 
+            ({{ mem.get_role_display }})
+          </span>
+          <!-- Если нужно что-то еще - можно добавить badge -->
         </li>
+      {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted">Участников нет</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Приглашения - только для admin -->
+{% if membership.role == 'admin' %}
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h5 class="card-title">Приглашения</h5>
+
+    {% if invitations %}
+      <ul class="list-group">
+        {% for inv in invitations %}
+          <li class="list-group-item">
+            {{ inv.email }} —
+            {% if inv.accepted %}
+              <span class="badge bg-success">Принято</span>
+            {% elif inv.declined %}
+              <span class="badge bg-danger">Отклонено</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Ожидает подтверждения</span>
+            {% endif %}
+          </li>
         {% empty %}
-        <li>Приглашений нет</li>
+          <li class="list-group-item text-muted">Приглашений нет</li>
         {% endfor %}
-    </ul>
+      </ul>
+    {% else %}
+      <p class="text-muted mb-0">Приглашений нет</p>
     {% endif %}
 
-  {% if membership.role == 'admin' %}
-    <a class="btn btn-primary" href="{% url 'org_invite' org.id %}">Пригласить пользователя</a>
-  {% endif %}
+    <a class="btn btn-primary mt-3" href="{% url 'org_invite' org.id %}">
+      <i class="bi bi-person-plus"></i> Пригласить пользователя
+    </a>
+  </div>
+</div>
+{% endif %}
 
-  {% if membership.role == 'member' %}
+
+<!-- Действия (например, покинуть) -->
+{% if membership.role == 'member' %}
+<div>
   <a href="{% url 'org_leave' org.id %}" class="btn btn-danger mt-3">Покинуть</a>
-  {% endif %}
+</div>
+{% endif %}
+
 {% endblock %}

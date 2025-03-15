@@ -1,56 +1,71 @@
 {% extends "main/base.html" %}
 {% load static %}
 {% block content %}
-<h2>Поставщики ({{ org.name }})</h2>
 
-<button 
-  type="button" 
-  class="btn btn-primary mb-3"
-  data-bs-toggle="modal"
-  data-bs-target="#supplierModal"
->
-  Добавить поставщика
-</button>
+<h2 class="mb-4">Поставщики ({{ org.name }})</h2>
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Название</th>
-      <th>Контакты</th>
-      <th>Действия</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for s in suppliers %}
-    <tr>
-      <td>{{ s.name }}</td>
-      <td>{{ s.contact_info }}</td>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h4 class="card-title d-flex justify-content-between align-items-center">
+      Список поставщиков
       {% if membership.role == 'admin' %}
-      <td>
-        <a 
-            href="{% url 'supplier_edit' s.id %}" 
-            class="btn btn-sm btn-secondary"
-            title="Редактировать"
-        >
-            <i class="bi bi-pencil"></i>
-        </a>
-        <a 
-            href="{% url 'supplier_delete' s.id %}" 
-            class="btn btn-sm btn-danger"
-            title="Удалить"
-            onclick="return confirm('Удалить расход?');"
-        >
-            <i class="bi bi-trash"></i>
-        </a>
-      </td>
+      <button 
+        type="button" 
+        class="btn btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#supplierModal"
+      >
+        <i class="bi bi-plus-circle"></i>
+        Добавить
+      </button>
       {% endif %}
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
+    </h4>
 
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Название</th>
+            <th>Контакты</th>
+            {% if membership.role == 'admin' %}
+            <th>Действия</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for s in suppliers %}
+          <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.contact_info|default:"—" }}</td>
+            {% if membership.role == 'admin' %}
+            <td>
+              <a 
+                href="{% url 'supplier_edit' s.id %}" 
+                class="btn btn-sm btn-secondary"
+                title="Редактировать"
+              >
+                <i class="bi bi-pencil"></i>
+              </a>
+              <a 
+                href="{% url 'supplier_delete' s.id %}" 
+                class="btn btn-sm btn-danger"
+                title="Удалить"
+                onclick="return confirm('Удалить поставщика?');"
+              >
+                <i class="bi bi-trash"></i>
+              </a>
+            </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
 <!-- Модальное окно "Добавить поставщика" -->
+{% if membership.role == 'admin' %}
 <div class="modal fade" id="supplierModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -79,12 +94,17 @@
               type="button" 
               class="btn btn-secondary" 
               data-bs-dismiss="modal"
-            >Отмена</button>
+            >
+              Отмена
+            </button>
             <button type="submit" class="btn btn-success">Сохранить</button>
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
+{% endif %}
+
 {% endblock %}

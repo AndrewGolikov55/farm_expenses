@@ -1,132 +1,146 @@
-{# finances/templates/finances/finances_index.html #}
 {% extends "main/base.html" %}
 {% load static %}
 {% block content %}
 
-<h2>Финансы ({{ org.name }})</h2>
+<h2 class="mb-4">Финансы ({{ org.name }})</h2>
 
-<div class="row">
-  <!-- Левая колонка: Расходы -->
+<div class="row g-4">
+  <!-- Блок расходов -->
   <div class="col-md-6">
-    <h4>Расходы</h4>
-
-    {% if membership.role == 'admin' %}
-    <button 
-      type="button" 
-      class="btn btn-primary mb-3"
-      data-bs-toggle="modal"
-      data-bs-target="#expenseModal"
-    >
-      Добавить расход
-    </button>
-    {% endif %}
-
-    <table class="table table-bordered table-striped">
-      <thead>
-        <tr>
-          <th>Категория</th>
-          <th>Описание</th>
-          <th>Сумма</th>
-          <th>Дата</th>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title d-flex justify-content-between align-items-center">
+          Расходы
           {% if membership.role == 'admin' %}
-          <th>Действия</th>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#expenseModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Добавить
+          </button>
           {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for e in expenses %}
-          <tr>
-            <td>{% if e.category %}{{ e.category.name }}{% else %}--{% endif %}</td>
-            <td>{{ e.description }}</td>
-            <td>{{ e.amount }}</td>
-            <td>{{ e.date }}</td>
-            {% if membership.role == 'admin' %}
-            <td>
-                <a 
-                    href="{% url 'expense_edit' e.id %}" 
-                    class="btn btn-sm btn-secondary"
-                    title="Редактировать"
-                >
-                    <i class="bi bi-pencil"></i>
-                </a>
-                <a 
-                    href="{% url 'expense_delete' e.id %}" 
-                    class="btn btn-sm btn-danger"
-                    title="Удалить"
-                    onclick="return confirm('Удалить расход?');"
-                >
-                    <i class="bi bi-trash"></i>
-                </a>
-            </td>
-            {% endif %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </h4>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Категория</th>
+                <th>Описание</th>
+                <th>Сумма</th>
+                <th>Дата</th>
+                {% if membership.role == 'admin' %}
+                <th>Действия</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in expenses %}
+                <tr>
+                  <td>{% if e.category %}{{ e.category.name }}{% else %}--{% endif %}</td>
+                  <td>{{ e.description|default:"—" }}</td>
+                  <td>{{ e.amount }}</td>
+                  <td>{{ e.date }}</td>
+                  {% if membership.role == 'admin' %}
+                  <td>
+                    <a 
+                      href="{% url 'expense_edit' e.id %}" 
+                      class="btn btn-sm btn-secondary"
+                      title="Редактировать"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a 
+                      href="{% url 'expense_delete' e.id %}" 
+                      class="btn btn-sm btn-danger"
+                      title="Удалить"
+                      onclick="return confirm('Удалить расход?');"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Правая колонка: Доходы -->
+  <!-- Блок доходов -->
   <div class="col-md-6">
-    <h4>Доходы</h4>
-
-    {% if membership.role == 'admin' %}
-    <button 
-      type="button" 
-      class="btn btn-primary mb-3"
-      data-bs-toggle="modal"
-      data-bs-target="#incomeModal"
-    >
-      Добавить доход
-    </button>
-    {% endif %}
-
-    <table class="table table-bordered table-striped">
-      <thead>
-        <tr>
-          <th>Категория</th>
-          <th>Описание</th>
-          <th>Сумма</th>
-          <th>Дата</th>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title d-flex justify-content-between align-items-center">
+          Доходы
           {% if membership.role == 'admin' %}
-          <th>Действия</th>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#incomeModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Добавить
+          </button>
           {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-        {% for inc in incomes %}
-          <tr>
-            <td>{% if inc.category %}{{ inc.category.name }}{% else %}--{% endif %}</td>
-            <td>{{ inc.description }}</td>
-            <td>{{ inc.amount }}</td>
-            <td>{{ inc.date }}</td>
-            {% if membership.role == 'admin' %}
-            <td>
-                <a 
-                    href="{% url 'income_edit' inc.id %}" 
-                    class="btn btn-sm btn-secondary"
-                    title="Редактировать"
-                >
-                    <i class="bi bi-pencil"></i>
-                </a>
-                <a 
-                    href="{% url 'income_delete' inc.id %}" 
-                    class="btn btn-sm btn-danger"
-                    title="Удалить"
-                    onclick="return confirm('Удалить расход?');"
-                >
-                    <i class="bi bi-trash"></i>
-                </a>
-            </td>
-            {% endif %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </h4>
+
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Категория</th>
+                <th>Описание</th>
+                <th>Сумма</th>
+                <th>Дата</th>
+                {% if membership.role == 'admin' %}
+                <th>Действия</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for inc in incomes %}
+                <tr>
+                  <td>{% if inc.category %}{{ inc.category.name }}{% else %}--{% endif %}</td>
+                  <td>{{ inc.description|default:"—" }}</td>
+                  <td>{{ inc.amount }}</td>
+                  <td>{{ inc.date }}</td>
+                  {% if membership.role == 'admin' %}
+                  <td>
+                    <a 
+                      href="{% url 'income_edit' inc.id %}" 
+                      class="btn btn-sm btn-secondary"
+                      title="Редактировать"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <a 
+                      href="{% url 'income_delete' inc.id %}" 
+                      class="btn btn-sm btn-danger"
+                      title="Удалить"
+                      onclick="return confirm('Удалить доход?');"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </a>
+                  </td>
+                  {% endif %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-
-{# Модальное окно: Добавить расход #}
+<!-- Модальное окно: Добавить расход -->
 {% if membership.role == 'admin' %}
 <div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
@@ -138,7 +152,6 @@
       <div class="modal-body">
         <form method="POST" action="{% url 'expense_create' %}" novalidate>
           {% csrf_token %}
-
           <div class="mb-3">
             <label for="id_category" class="form-label">Категория</label>
             {{ expense_form.category }}
@@ -168,7 +181,7 @@
   </div>
 </div>
 
-{# Модальное окно: Добавить доход #}
+<!-- Модальное окно: Добавить доход -->
 <div class="modal fade" id="incomeModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -179,7 +192,6 @@
       <div class="modal-body">
         <form method="POST" action="{% url 'income_create' %}" novalidate>
           {% csrf_token %}
-
           <div class="mb-3">
             <label for="id_category" class="form-label">Категория</label>
             {{ income_form.category }}

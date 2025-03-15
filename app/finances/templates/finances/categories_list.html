@@ -1,115 +1,134 @@
 {% extends "main/base.html" %}
 {% load static %}
 {% block content %}
-<h2>Категории ({{ org.name }})</h2>
 
-<div class="row">
+<h2 class="mb-4">Категории ({{ org.name }})</h2>
+
+<div class="row g-4">
   <!-- Левая колонка: категории расходов -->
   <div class="col-md-6">
-    <h4>Категории расходов</h4>
-    {% if membership.role == 'admin' %}
-    <button 
-      type="button" 
-      class="btn btn-primary mb-3"
-      data-bs-toggle="modal"
-      data-bs-target="#expenseCategoryModal"
-    >
-      Добавить категорию (Расходы)
-    </button>
-    {% endif %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title d-flex justify-content-between align-items-center">
+          Категории расходов
+          {% if membership.role == 'admin' %}
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#expenseCategoryModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Добавить
+          </button>
+          {% endif %}
+        </h4>
 
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Название</th>
-          <th>Описание</th>
-          {% if membership.role == 'admin' %}
-          <th>Действия</th>
-          {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-      {% for cat in expense_cats %}
-        <tr>
-          <td>{{ cat.name }}</td>
-          <td>{{ cat.description }}</td>
-          {% if membership.role == 'admin' %}
-          <td>
-            <a 
-                href="{% url 'category_edit' cat.id %}" 
-                class="btn btn-sm btn-secondary"
-                title="Редактировать"
-            >
-                <i class="bi bi-pencil"></i>
-            </a>
-            <a 
-                href="{% url 'category_delete' cat.id %}" 
-                class="btn btn-sm btn-danger"
-                title="Удалить"
-                onclick="return confirm('Удалить расход?');"
-            >
-                <i class="bi bi-trash"></i>
-            </a>
-          </td>
-          {% endif %}
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                {% if membership.role == 'admin' %}
+                <th>Действия</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+            {% for cat in expense_cats %}
+              <tr>
+                <td>{{ cat.name }}</td>
+                <td>{{ cat.description|default:"—" }}</td>
+                {% if membership.role == 'admin' %}
+                <td>
+                  <a 
+                    href="{% url 'category_edit' cat.id %}" 
+                    class="btn btn-sm btn-secondary"
+                    title="Редактировать"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <a 
+                    href="{% url 'category_delete' cat.id %}" 
+                    class="btn btn-sm btn-danger"
+                    title="Удалить"
+                    onclick="return confirm('Удалить категорию?');"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </a>
+                </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Правая колонка: категории доходов -->
   <div class="col-md-6">
-    <h4>Категории доходов</h4>
-    {% if membership.role == 'admin' %}
-    <button 
-      type="button" 
-      class="btn btn-primary mb-3"
-      data-bs-toggle="modal"
-      data-bs-target="#incomeCategoryModal"
-    >
-      Добавить категорию (Доходы)
-    </button>
-    {% endif %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title d-flex justify-content-between align-items-center">
+          Категории доходов
+          {% if membership.role == 'admin' %}
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            data-bs-toggle="modal"
+            data-bs-target="#incomeCategoryModal"
+          >
+            <i class="bi bi-plus-circle"></i>
+            Добавить
+          </button>
+          {% endif %}
+        </h4>
 
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Название</th>
-          <th>Описание</th>
-          {% if membership.role == 'admin' %}
-          <th>Действия</th>
-          {% endif %}
-        </tr>
-      </thead>
-      <tbody>
-      {% for icat in income_cats %}
-        <tr>
-          <td>{{ icat.name }}</td>
-          <td>{{ icat.description }}</td>
-          {% if membership.role == 'admin' %}
-          <td>
-            <a 
-                href="{% url 'income_category_edit' icat.id %}" 
-                class="btn btn-sm btn-secondary"
-                title="Редактировать"
-            >
-                <i class="bi bi-pencil"></i>
-            </a>
-            <a 
-                href="{% url 'income_category_delete' icat.id %}" 
-                class="btn btn-sm btn-danger"
-                title="Удалить"
-                onclick="return confirm('Удалить расход?');"
-            >
-                <i class="bi bi-trash"></i>
-            </a>
-          </td>
-          {% endif %}
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Описание</th>
+                {% if membership.role == 'admin' %}
+                <th>Действия</th>
+                {% endif %}
+              </tr>
+            </thead>
+            <tbody>
+            {% for icat in income_cats %}
+              <tr>
+                <td>{{ icat.name }}</td>
+                <td>{{ icat.description|default:"—" }}</td>
+                {% if membership.role == 'admin' %}
+                <td>
+                  <a 
+                    href="{% url 'income_category_edit' icat.id %}" 
+                    class="btn btn-sm btn-secondary"
+                    title="Редактировать"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                  <a 
+                    href="{% url 'income_category_delete' icat.id %}" 
+                    class="btn btn-sm btn-danger"
+                    title="Удалить"
+                    onclick="return confirm('Удалить категорию?');"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </a>
+                </td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -127,23 +146,23 @@
       <div class="modal-body">
         <form method="POST" action="{% url 'category_create' %}">
           {% csrf_token %}
-
           <div class="form-floating mb-3">
             {{ expense_cat_form.name }}
             <label for="id_name">Название</label>
           </div>
-
           <div class="form-floating mb-3" style="height:80px;">
             {{ expense_cat_form.description }}
             <label for="id_description">Описание</label>
           </div>
-
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Отмена
+            </button>
             <button type="submit" class="btn btn-success">Сохранить</button>
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
@@ -161,25 +180,26 @@
       <div class="modal-body">
         <form method="POST" action="{% url 'income_category_create' %}">
           {% csrf_token %}
-
           <div class="form-floating mb-3">
             {{ income_cat_form.name }}
             <label for="id_income_cat_name">Название</label>
           </div>
-
           <div class="form-floating mb-3" style="height:80px;">
             {{ income_cat_form.description }}
             <label for="id_income_cat_description">Описание</label>
           </div>
-
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Отмена
+            </button>
             <button type="submit" class="btn btn-success">Сохранить</button>
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
 {% endif %}
+
 {% endblock %}
