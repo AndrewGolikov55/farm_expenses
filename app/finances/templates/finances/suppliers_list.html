@@ -27,13 +27,20 @@
       <td>{{ s.contact_info }}</td>
       {% if membership.role == 'admin' %}
       <td>
-        <a href="{% url 'supplier_edit' s.id %}" class="btn btn-sm btn-secondary">Изменить</a>
         <a 
-          href="{% url 'supplier_delete' s.id %}"
-          class="btn btn-sm btn-danger"
-          onclick="return confirm('Удалить поставщика?');"
+            href="{% url 'supplier_edit' s.id %}" 
+            class="btn btn-sm btn-secondary"
+            title="Редактировать"
         >
-          Удалить
+            <i class="bi bi-pencil"></i>
+        </a>
+        <a 
+            href="{% url 'supplier_delete' s.id %}" 
+            class="btn btn-sm btn-danger"
+            title="Удалить"
+            onclick="return confirm('Удалить расход?');"
+        >
+            <i class="bi bi-trash"></i>
         </a>
       </td>
       {% endif %}

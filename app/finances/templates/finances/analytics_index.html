@@ -2,30 +2,35 @@
 {% load static %}
 
 {% block content %}
+<!-- В analytics_index.html -->
 <h2>Аналитика по {{ org.name }}</h2>
-<p>Общая сумма расходов: <b>{{ total_expenses }}</b> ₽</p>
-<p>Общая сумма доходов: <b>{{ total_incomes }}</b> ₽</p>
-<hr>
-<h4>Баланс: <b>{{ balance }}</b> ₽</h4>
+<p>Доходы: <b>{{ total_incomes }}</b>  Расходы: <b>{{ total_expenses }}</b>  Баланс: <b>{{ balance }}</b></p>
 
-<div class="row mb-4">
+<div class="row">
   <div class="col-md-6">
-    <h4>Динамика расходов (помесячно за год):</h4>
-    <canvas id="monthChart" width="400" height="200"></canvas>
+    <h4>Месячные Расходы / Доходы</h4>
+    <canvas id="financesChart" width="400" height="200"></canvas>
   </div>
   <div class="col-md-6">
-    <h4>Распределение расходов по категориям:</h4>
+    <h4>Распределение расходов по категориям</h4>
     <canvas id="catChart" width="300" height="300"></canvas>
   </div>
 </div>
 
-<!-- Скрытые теги для хранения JSON-данных -->
+<!-- JSON-данные -->
 <script type="application/json" id="monthLabelsJSON">
   {{ month_labels_json|safe }}
 </script>
-<script type="application/json" id="monthValuesJSON">
-  {{ month_values_json|safe }}
+<script type="application/json" id="expensesListJSON">
+  {{ expenses_list_json|safe }}
 </script>
+<script type="application/json" id="incomesListJSON">
+  {{ incomes_list_json|safe }}
+</script>
+<script type="application/json" id="balanceListJSON">
+  {{ balance_list_json|safe }}
+</script>
+
 <script type="application/json" id="catLabelsJSON">
   {{ cat_labels_json|safe }}
 </script>
@@ -33,11 +38,73 @@
   {{ cat_values_json|safe }}
 </script>
 
-{% endblock %}
-
 {% block extra_js %}
-<!-- Подключаем Chart.js из CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-<!-- Подключаем наш внешний скрипт -->
-<script src="{% static 'js/analytics.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // 1) Считываем JSON
+  const monthLabels = JSON.parse(document.getElementById('monthLabelsJSON').textContent);
+  const expensesData = JSON.parse(document.getElementById('expensesListJSON').textContent);
+  const incomesData = JSON.parse(document.getElementById('incomesListJSON').textContent);
+  const balanceData = JSON.parse(document.getElementById('balanceListJSON').textContent);
+
+  const catLabels = JSON.parse(document.getElementById('catLabelsJSON').textContent);
+  const catValues = JSON.parse(document.getElementById('catValuesJSON').textContent);
+
+  // 2) Линейная диаграмма с 3 рядами: Расходы, Доходы, Баланс
+  const ctxFinances = document.getElementById('financesChart');
+  if (ctxFinances) {
+    new Chart(ctxFinances, {
+      type: 'line',
+      data: {
+        labels: monthLabels,
+        datasets: [
+          {
+            label: 'Расходы',
+            data: expensesData,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)'
+          },
+          {
+            label: 'Доходы',
+            data: incomesData,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)'
+          },
+          {
+            label: 'Баланс',
+            data: balanceData,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  // 3) Круговая диаграмма расходов
+  const ctxCat = document.getElementById('catChart');
+  if (ctxCat) {
+    new Chart(ctxCat, {
+      type: 'pie',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          label: 'Расходы по категориям',
+          data: catValues,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
 {% endblock %}

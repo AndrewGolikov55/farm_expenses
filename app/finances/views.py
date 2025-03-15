@@ -63,7 +63,6 @@ def expense_create_view(request):
 # Аналитика
 @login_required
 def analytics_index(request):
-    """Аналитика финансов фермерского хозяйства."""
     membership = Membership.objects.filter(user=request.user).first()
     if not membership:
         messages.error(request, "Вы не состоите ни в одной организации.")
@@ -71,27 +70,66 @@ def analytics_index(request):
 
     org = membership.organization
 
-    # 1) Группируем расходы по месяцам (за последний год)
-    one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
-    data_by_month_qs = (
+    # 1) Дата год назад
+    one_year_ago = datetime.date.today().replace(day=1) - datetime.timedelta(days=365)
+
+    # 2) Месячные расходы
+    expense_by_month = (
         Expense.objects
                .filter(organization=org, date__gte=one_year_ago)
                .annotate(month=TruncMonth('date'))
                .values('month')
-               .annotate(total=Sum('amount'))
+               .annotate(sum_exp=Sum('amount'))
                .order_by('month')
     )
-    # Превратим в списки для Chart.js
-    month_labels = []
-    month_values = []
-    for row in data_by_month_qs:
-        # row['month'] – это дата начала месяца (datetime)
-        month_str = row['month'].strftime('%Y-%m')  # Пример: "2025-03"
-        month_labels.append(month_str)
-        month_values.append(float(row['total'] or 0))
 
-    # 2) Распределение расходов по категориям
-    data_by_cat_qs = (
+    # 3) Месячные доходы
+    income_by_month = (
+        Income.objects
+              .filter(organization=org, date__gte=one_year_ago)
+              .annotate(month=TruncMonth('date'))
+              .values('month')
+              .annotate(sum_inc=Sum('amount'))
+              .order_by('month')
+    )
+
+    # Превращаем в словари {month -> sum_exp} / {month -> sum_inc}
+    expense_map = {}
+    for row in expense_by_month:
+        expense_map[row['month']] = float(row['sum_exp'] or 0)
+
+    income_map = {}
+    for row in income_by_month:
+        income_map[row['month']] = float(row['sum_inc'] or 0)
+
+    # 4) Собираем общий список месяцев (берём объединение ключей)
+    all_months = sorted(set(expense_map.keys()) | set(income_map.keys()))
+
+    month_labels = []
+    expenses_list = []
+    incomes_list = []
+    balance_list = []
+
+    for m in all_months:
+        # Пример: m.strftime('%Y-%m')
+        label_str = m.strftime('%Y-%m')
+        month_labels.append(label_str)
+
+        exp_val = expense_map.get(m, 0)
+        inc_val = income_map.get(m, 0)
+        expenses_list.append(exp_val)
+        incomes_list.append(inc_val)
+
+        # Баланс за месяц
+        balance_list.append(inc_val - exp_val)
+
+    # 5) Итоговые суммы (уже есть)
+    total_expenses = sum(expenses_list)
+    total_incomes = sum(incomes_list)
+    balance = total_incomes - total_expenses
+
+    # 6) Распределение расходов по категориям (как у Вас)
+    cat_qs = (
         Expense.objects
                .filter(organization=org)
                .values('category__name')
@@ -100,31 +138,29 @@ def analytics_index(request):
     )
     cat_labels = []
     cat_values = []
-    for row in data_by_cat_qs:
+    for row in cat_qs:
         cat_name = row['category__name'] or "Без категории"
         cat_labels.append(cat_name)
         cat_values.append(float(row['total'] or 0))
 
-    # 3) Общая сумма расходов (за всё время)
-    total_expenses = (
-        Expense.objects
-               .filter(organization=org)
-               .aggregate(sum_exp=Sum('amount'))
-               .get('sum_exp') or 0
-    )
-
-    # Сериализуем списки в JSON
+    # 7) Сериализуем для Chart.js
     context = {
         'org': org,
         'total_expenses': total_expenses,
+        'total_incomes': total_incomes,
+        'balance': balance,
 
-        # Передаём сериализованные строки
+        # График месяц -> расход, доход, баланс
         'month_labels_json': json.dumps(month_labels),
-        'month_values_json': json.dumps(month_values),
+        'expenses_list_json': json.dumps(expenses_list),
+        'incomes_list_json': json.dumps(incomes_list),
+        'balance_list_json': json.dumps(balance_list),
 
+        # Распределение расходов
         'cat_labels_json': json.dumps(cat_labels),
         'cat_values_json': json.dumps(cat_values),
     }
+
     return render(request, 'finances/analytics_index.html', context)
 
 

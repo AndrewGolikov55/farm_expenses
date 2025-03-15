@@ -42,14 +42,21 @@
             <td>{{ e.date }}</td>
             {% if membership.role == 'admin' %}
             <td>
-              <a href="{% url 'expense_edit' e.id %}" class="btn btn-sm btn-secondary">Изменить</a>
-              <a 
-                href="{% url 'expense_delete' e.id %}"
-                class="btn btn-sm btn-danger"
-                onclick="return confirm('Удалить расход?');"
-              >
-                Удалить
-              </a>
+                <a 
+                    href="{% url 'expense_edit' e.id %}" 
+                    class="btn btn-sm btn-secondary"
+                    title="Редактировать"
+                >
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <a 
+                    href="{% url 'expense_delete' e.id %}" 
+                    class="btn btn-sm btn-danger"
+                    title="Удалить"
+                    onclick="return confirm('Удалить расход?');"
+                >
+                    <i class="bi bi-trash"></i>
+                </a>
             </td>
             {% endif %}
           </tr>
@@ -94,14 +101,21 @@
             <td>{{ inc.date }}</td>
             {% if membership.role == 'admin' %}
             <td>
-              <a href="{% url 'income_edit' inc.id %}" class="btn btn-sm btn-secondary">Изменить</a>
-              <a 
-                href="{% url 'income_delete' inc.id %}"
-                class="btn btn-sm btn-danger"
-                onclick="return confirm('Удалить доход?');"
-              >
-                Удалить
-              </a>
+                <a 
+                    href="{% url 'income_edit' inc.id %}" 
+                    class="btn btn-sm btn-secondary"
+                    title="Редактировать"
+                >
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <a 
+                    href="{% url 'income_delete' inc.id %}" 
+                    class="btn btn-sm btn-danger"
+                    title="Удалить"
+                    onclick="return confirm('Удалить расход?');"
+                >
+                    <i class="bi bi-trash"></i>
+                </a>
             </td>
             {% endif %}
           </tr>

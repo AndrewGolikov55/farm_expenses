@@ -35,13 +35,20 @@
           <td>{{ cat.description }}</td>
           {% if membership.role == 'admin' %}
           <td>
-            <a href="{% url 'category_edit' cat.id %}" class="btn btn-sm btn-secondary">Изменить</a>
             <a 
-              href="{% url 'category_delete' cat.id %}"
-              class="btn btn-sm btn-danger"
-              onclick="return confirm('Удалить категорию расходов?');"
+                href="{% url 'category_edit' cat.id %}" 
+                class="btn btn-sm btn-secondary"
+                title="Редактировать"
             >
-              Удалить
+                <i class="bi bi-pencil"></i>
+            </a>
+            <a 
+                href="{% url 'category_delete' cat.id %}" 
+                class="btn btn-sm btn-danger"
+                title="Удалить"
+                onclick="return confirm('Удалить расход?');"
+            >
+                <i class="bi bi-trash"></i>
             </a>
           </td>
           {% endif %}
@@ -82,13 +89,20 @@
           <td>{{ icat.description }}</td>
           {% if membership.role == 'admin' %}
           <td>
-            <a href="{% url 'income_category_edit' icat.id %}" class="btn btn-sm btn-secondary">Изменить</a>
             <a 
-              href="{% url 'income_category_delete' icat.id %}"
-              class="btn btn-sm btn-danger"
-              onclick="return confirm('Удалить категорию доходов?');"
+                href="{% url 'income_category_edit' icat.id %}" 
+                class="btn btn-sm btn-secondary"
+                title="Редактировать"
             >
-              Удалить
+                <i class="bi bi-pencil"></i>
+            </a>
+            <a 
+                href="{% url 'income_category_delete' icat.id %}" 
+                class="btn btn-sm btn-danger"
+                title="Удалить"
+                onclick="return confirm('Удалить расход?');"
+            >
+                <i class="bi bi-trash"></i>
             </a>
           </td>
           {% endif %}

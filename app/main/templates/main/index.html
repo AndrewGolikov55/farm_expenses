@@ -1,8 +1,115 @@
 {% extends "main/base.html" %}
-
+{% load static %}
 {% block head_title %}Главная{% endblock %}
 
 {% block content %}
-  <h1>Добро пожаловать, {{ request.user.username }}!</h1>
-  <p>Вы успешно авторизованы.</p>
+
+<h1 class="mb-4">Добро пожаловать, {{ request.user.username }}!</h1>
+
+<!-- Блок общей информации -->
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Ваша организация</h5>
+        {% if membership and membership.organization %}
+          <p class="card-text">
+            <b>{{ membership.organization.name }}</b><br>
+            <small>{{ membership.organization.description }}</small>
+          </p>
+          <p class="card-text">
+            Ваша роль: 
+            <span class="badge bg-info text-dark">{{ membership.get_role_display }}</span>
+          </p>
+        {% else %}
+          <p class="text-muted">Пока не состоите в организации.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Быстрый переход</h5>
+        <!-- Кнопки на основные разделы -->
+        <div class="d-grid gap-2">
+          <a href="{% url 'finances_index' %}" class="btn btn-outline-primary">
+            <i class="bi bi-cash"></i>&nbsp; Финансы
+          </a>
+          <a href="{% url 'categories_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-tags-fill"></i>&nbsp; Категории
+          </a>
+          <a href="{% url 'suppliers_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-truck"></i>&nbsp; Поставщики
+          </a>
+          <a href="{% url 'analytics_index' %}" class="btn btn-outline-success">
+            <i class="bi bi-graph-up-arrow"></i>&nbsp; Аналитика
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Быстрые факты и мини-таблица последних операций -->
+  <div class="col-md-6">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Быстрые факты</h5>
+
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2">
+            Всего расходов: <b>{{ total_exp_count }}</b>
+          </li>
+          <li class="mb-2">
+            Всего доходов: <b>{{ total_inc_count }}</b>
+          </li>
+          <li class="mb-2">
+            Кол-во поставщиков: <b>{{ total_suppliers }}</b>
+          </li>
+          <li class="mb-2">
+            Кол-во категорий (расходов/доходов): 
+            <b>{{ total_exp_cats }}/{{ total_inc_cats }}</b>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Последние операции</h5>
+
+        {% if last_operations %}
+          <table class="table table-sm table-bordered">
+            <thead>
+              <tr>
+                <th>Тип</th>
+                <th>Сумма</th>
+                <th>Описание</th>
+                <th>Дата</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for op in last_operations %}
+              <tr>
+                <td>
+                  {% if op.type == 'exp' %}
+                    <span class="badge bg-danger">Расход</span>
+                  {% else %}
+                    <span class="badge bg-success">Доход</span>
+                  {% endif %}
+                </td>
+                <td>{{ op.amount }}</td>
+                <td>{{ op.description|default:'-' }}</td>
+                <td>{{ op.date }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p class="text-muted">Нет операций</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
