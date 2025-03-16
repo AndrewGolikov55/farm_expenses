@@ -138,8 +138,8 @@ for sname, scontact in SUPPLIERS:
 # Expense.objects.filter(organization=org).delete()
 # Income.objects.filter(organization=org).delete()
 
-start_date = datetime.date(2024, 1, 1)
-end_date = datetime.date(2024, 12, 31)
+start_date = datetime.date(2025, 1, 1)
+end_date = datetime.date(2025, 3, 20)
 
 # Пройдём по месяцам 2024
 current = start_date

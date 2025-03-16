@@ -68,7 +68,7 @@ $ python manage.py runserver
 │   ├── main          # Основной модуль приложения
 │   ├── organizations # Управление организациями
 │   ├── users         # Аутентификация и пользователи
-│   ├── scripts       # Тестовые данные
+│   ├── scripts       # Скрипты для добавления тестовых данных
 │   ├── manage.py     # Управление Django
 │   ├── create_admin.py # Скрипт для создания администратора
 ├── docker
@@ -78,14 +78,6 @@ $ python manage.py runserver
 │   ├── requirements.txt # Python зависимости
 └── inside_repo.sh      # Скрипт выполнения команд в контейнере
 ```
-
-## API Документация
-После запуска сервера API доступен по адресу:
-```
-http://localhost:8000/api/
-```
-
-Примеры API-запросов доступны в `Postman` или через `curl`.
 
 ## Автор
 Разработано **A. Golikov**
